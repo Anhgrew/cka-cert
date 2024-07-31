@@ -87,6 +87,12 @@ kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/
 # After worker node created
 kubectl label node <node-name> node-role.kubernetes.io/worker=worker
 
+# Install CSI for AWS EBS
+kubectl apply -k "github.com/kubernetes-sigs/aws-ebs-csi-driver/deploy/kubernetes/overlays/stable/?ref=release-1.33"
+
+#Install K9s
+curl -sS https://webinstall.dev/k9s | bash
+
 # Worker Node
 sudo kubeadm join 172.31.41.232:6443 --token t997ee.8jkv2j2im296mu0l \
 	--discovery-token-ca-cert-hash sha256:42d7d860bf875a4410ab13578776e5af463ccb0ed9b275b3bbcb8a829226bc4b 
