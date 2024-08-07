@@ -1,0 +1,17 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: example-job
+spec:
+  completions: 4
+  parallelism: 4
+  template:
+    spec:
+      containers:
+        - name: example
+          image: busybox
+          command: ["echo", "Hello, Kubernetes!"]
+      restartPolicy: OnFailure
+  ttlSecondsAfterFinished: 15
+  backoffLimit: 4
+  activeDeadlineSeconds: 100

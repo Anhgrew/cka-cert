@@ -1,0 +1,26 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: ebs-sc-retain
+provisioner: ebs.csi.aws.com
+parameters:
+  type: gp3 # The type of EBS volume (gp2, io1, st1, sc1)
+  fsType: ext4 # The filesystem type to format the volume (ext4, xfs)
+  # encrypted: "true" # Whether the volume should be encrypted
+  # kmsKeyId: arn:aws:kms:region:account-id:key/key-id # KMS key ID for encryption
+  # iopsPerGB: "10" # IOPS per GB for io1 volumes
+  # throughput: "500" # Throughput for gp3 volumes
+  # tags: "key1=value1,key2=value2" # Tags to apply to the volume
+reclaimPolicy: Retain # Specifies what happens to the PV when the PVC is deleted (Retain, Delete, Recycle)
+volumeBindingMode: WaitForFirstConsumer # Volume binding mode (Immediate, WaitForFirstConsumer)
+allowVolumeExpansion: true # Allow volume expansion
+# mountOptions:
+#   - noatime
+#   - nodiratime
+#   - nobarrier
+#   - noexec
+allowedTopologies:
+  - matchLabelExpressions:
+      - key: topology.kubernetes.io/zone
+        values:
+          - ap-southeast-1b

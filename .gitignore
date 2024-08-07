@@ -1,0 +1,57 @@
+# Ignore Terraform state files in all directories
+**/*.tfstate
+**/*.tfstate.*
+
+# Ignore Terraform crash log files in all directories
+**/crash.log
+
+# Ignore Terraform variable files in all directories
+**/*.tfvars
+**/*.tfvars.json
+
+# Ignore Terraform override files in all directories
+**/override.tf
+**/override.tf.json
+**/*_override.tf
+**/*_override.tf.json
+
+# Ignore Terraform plan files in all directories
+**/*.tfplan
+
+# Ignore Terraform provider override files in all directories
+**/.terraformrc
+**/terraform.rc
+
+# Ignore directories for Terraform's plugin and modules in all directories
+**/.terraform/
+
+# Ignore lock file for Terraform providers in all directories
+**/.terraform.lock.hcl
+
+# Ignore the generated plan outputs in all directories
+**/plan.out
+
+# Ignore sensitive files (e.g., environment variables or credentials) in all directories
+**/.env
+**/.env.*
+
+# Ignore logs and debug output in all directories
+**/*.log
+
+# Ignore generated code coverage reports in all directories
+**/coverage/
+
+# Ignore IDE and editor-specific files in all directories
+**/.vscode/
+**/.idea/
+**/*.swp
+**/*.swo
+**/.DS_Store
+.DS_Store
+
+# Ignore node_modules directories in all directories
+**/node_modules/
+**/node_modules/**
+**/npm-debug.log
+**/package-lock.json
+**/*.pem

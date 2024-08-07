@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elearning
+  namespace: elearning
+spec:
+  strategy:
+    type: RollingUpdate
+  replicas: 3
+  selector:
+    matchLabels:
+      app: elearning
+  template:
+    metadata:
+      labels:
+        app: elearning
+    spec:
+      containers:
+        - name: elearning
+          image: anhgrew/elearning:latest
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: application-secret
+              mountPath: /config
+              readOnly: true
+      volumes:
+        - name: application-secret
+          secret:
+            secretName: application-secret
+      tolerations:
+        - key: "k"
+          operator: "Exists"
+          effect: "NoSchedule"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elearning-service
+  namespace: elearning
+spec:
+  selector:
+    app: elearning
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+      nodePort: 30008
+  type: NodePort

@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-app
+  template:
+    metadata:
+      labels:
+        app: demo-app
+    spec:
+      containers:
+        - name: demo-app-container
+          image: busybox
+          command: ["sh", "-c", "sleep 3600"]
+          volumeMounts:
+            - mountPath: /mnt/data
+              name: ebs-volume
+      volumes:
+        - name: ebs-volume
+          persistentVolumeClaim:
+            claimName: demo-pv
+      nodeName: ip-172-31-38-35.ap-southeast-1.compute.internal
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: demo-pvc
+spec:
+  capacity:
+    storage: 10Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  csi:
+    driver: ebs.csi.aws.com
+    volumeHandle: vol-0a7b5132620c3b0d3
+    fsType: ext4
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: topology.ebs.csi.aws.com/zone
+              operator: In
+              values:
+                - ap-southeast-1b
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: demo-pv
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: ""
+  volumeMode: Filesystem # Filesystem volume mode
+  volumeName: demo-pvc

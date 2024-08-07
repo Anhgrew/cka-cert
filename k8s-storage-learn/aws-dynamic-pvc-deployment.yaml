@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dynamic-ebs-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi # Adjust the size as needed
+  storageClassName: ebs-sc-retain
+  volumeMode: Filesystem # Filesystem volume mode
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-app
+  template:
+    metadata:
+      labels:
+        app: demo-app
+    spec:
+      containers:
+        - name: demo-app-container
+          image: busybox
+          command: ["sh", "-c", "sleep 3600"]
+          volumeMounts:
+            - mountPath: /mnt/data
+              name: ebs-volume
+      volumes:
+        - name: ebs-volume
+          persistentVolumeClaim:
+            claimName: dynamic-ebs-pvc
+      nodeName: ip-172-31-38-35.ap-southeast-1.compute.internal
