@@ -49,7 +49,7 @@ module "load_balancer" {
 
 
 resource "null_resource" "initialize_kubernetes_master" {
-  depends_on = [null_resource.wait_for_user_data, module.load_balancer]
+  depends_on = [null_resource.wait_for_user_data, module.load_balancer, module.ec2_instances]
 
   connection {
     type        = "ssh"
@@ -79,7 +79,7 @@ resource "null_resource" "initialize_kubernetes_master" {
 }
 
 resource "null_resource" "join_remaining_masters" {
-  depends_on = [null_resource.initialize_kubernetes_master, module.load_balancer]
+  depends_on = [null_resource.initialize_kubernetes_master, module.load_balancer, module.ec2_instances]
 
   count = length(module.ec2_instances.master_ips) - 1
 
@@ -111,9 +111,19 @@ resource "null_resource" "join_remaining_masters" {
 
   triggers = {
     file_hash = filemd5("join_kubernetes_master.sh")
+
   }
 }
 
+resource "null_resource" "copy_kube_config" {
+  depends_on = [null_resource.initialize_kubernetes_master, module.load_balancer]
+
+  provisioner "local-exec" {
+    command = <<EOT
+      scp -o StrictHostKeyChecking=no -i ./anhdrew.pem ec2-user@${module.ec2_instances.master_ips[0]}:/home/ec2-user/.kube/config ./kube_config
+    EOT
+  }
+}
 resource "null_resource" "join_worker_nodes" {
   depends_on = [null_resource.initialize_kubernetes_master, module.load_balancer]
 
@@ -149,3 +159,4 @@ resource "null_resource" "join_worker_nodes" {
     file_hash = filemd5("join_kubernetes_worker.sh")
   }
 }
+
