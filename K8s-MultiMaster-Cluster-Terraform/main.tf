@@ -36,6 +36,7 @@ resource "null_resource" "wait_for_user_data" {
 }
 
 module "load_balancer" {
+  count               = var.num_masters > 1 ? 1 : 0
   source              = "./modules/load_balancer"
   vpc_id              = var.vpc_id
   security_groups_ids = [module.security_group.security_group_id]
@@ -47,6 +48,9 @@ module "load_balancer" {
   depends_on = [module.security_group, null_resource.wait_for_user_data]
 }
 
+locals {
+  master_ip_or_dns = var.num_masters > 1 ? module.load_balancer[0].load_balancer_dns : module.ec2_instances.master_ips[0]
+}
 
 resource "null_resource" "initialize_kubernetes_master" {
   depends_on = [null_resource.wait_for_user_data, module.load_balancer, module.ec2_instances]
@@ -67,7 +71,7 @@ resource "null_resource" "initialize_kubernetes_master" {
   provisioner "remote-exec" {
     inline = [
       "sudo chmod +x /home/ec2-user/initialize_kubernetes.sh",
-      "bash /home/ec2-user/initialize_kubernetes.sh ${module.load_balancer.load_balancer_dns}"
+      "bash /home/ec2-user/initialize_kubernetes.sh ${module.ec2_instances.master_ips[0]}"
     ]
   }
   # triggers = {
@@ -111,7 +115,6 @@ resource "null_resource" "join_remaining_masters" {
 
   triggers = {
     file_hash = filemd5("join_kubernetes_master.sh")
-
   }
 }
 
@@ -120,12 +123,16 @@ resource "null_resource" "copy_kube_config" {
 
   provisioner "local-exec" {
     command = <<EOT
-      scp -o StrictHostKeyChecking=no -i ./anhdrew.pem ec2-user@${module.ec2_instances.master_ips[0]}:/home/ec2-user/.kube/config ./kube_config
+      scp -o StrictHostKeyChecking=no -i ./anhdrew.pem ec2-user@${module.ec2_instances.master_ips[0]}:/home/ec2-user/.kube/config ./kubeconfig
     EOT
+  }
+
+  triggers = {
+    always_run = timestamp() # Change to any value that you want to use as a trigger
   }
 }
 resource "null_resource" "join_worker_nodes" {
-  depends_on = [null_resource.initialize_kubernetes_master, module.load_balancer]
+  depends_on = [null_resource.initialize_kubernetes_master, module.load_balancer, module.ec2_instances]
 
   count = length(module.ec2_instances.worker_ips)
 

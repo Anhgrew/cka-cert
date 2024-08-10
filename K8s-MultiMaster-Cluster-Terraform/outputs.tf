@@ -16,7 +16,7 @@ output "worker_ips" {
 # Load Balancer outputs
 output "load_balancer_dns" {
   description = "The DNS name of the load balancer"
-  value       = module.load_balancer.load_balancer_dns
+  value       = local.master_ip_or_dns
 }
 
 output "ec2_user_data" {
